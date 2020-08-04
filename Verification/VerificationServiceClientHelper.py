@@ -1,28 +1,30 @@
 import http.client
 import urllib.parse
 import json
-import time
+
+# import time
 from contextlib import closing
-import ProfileCreationResponse
-import EnrollmentResponse
-import VerificationResponse
-import VerificationProfile
+from .ProfileCreationResponse import ProfileCreationResponse
+from .EnrollmentResponse import EnrollmentResponse
+from .VerificationResponse import VerificationResponse
+from .VerificationProfile import VerificationProfile
 import logging
 
-class VerificationServiceHttpClientHelper:
+
+class VerificationServiceClientHelper(object):
     """Abstracts the interaction with the Verification service."""
 
     _STATUS_OK = 200
-    _BASE_URI = 'westus.api.cognitive.microsoft.com'
-    _VERIFICATION_PROFILES_URI = '/spid/v1.0/verificationProfiles'
-    _VERIFICATION_URI = '/spid/v1.0/verify'
-    _SUBSCRIPTION_KEY_HEADER = 'Ocp-Apim-Subscription-Key'
-    _CONTENT_TYPE_HEADER = 'Content-Type'
-    _JSON_CONTENT_HEADER_VALUE = 'application/json'
-    _STREAM_CONTENT_HEADER_VALUE = 'application/octet-stream'
+    _BASE_URI = "westus.api.cognitive.microsoft.com"
+    _VERIFICATION_PROFILES_URI = "/spid/v1.0/verificationProfiles"
+    _VERIFICATION_URI = "/spid/v1.0/verify"
+    _SUBSCRIPTION_KEY_HEADER = "Ocp-Apim-Subscription-Key"
+    _CONTENT_TYPE_HEADER = "Content-Type"
+    _JSON_CONTENT_HEADER_VALUE = "application/json"
+    _STREAM_CONTENT_HEADER_VALUE = "application/octet-stream"
 
     def __init__(self, subscription_key):
-        """Constructor of the VerificationServiceHttpClientHelper class.
+        """Constructor of the VerificationServiceClientHelper class.
 
         Arguments:
         subscription_key -- the subscription key string
@@ -34,85 +36,93 @@ class VerificationServiceHttpClientHelper:
         try:
             # Send the request
             res, message = self._send_request(
-                'GET',
+                "GET",
                 self._BASE_URI,
                 self._VERIFICATION_PROFILES_URI,
-                self._JSON_CONTENT_HEADER_VALUE)
+                self._JSON_CONTENT_HEADER_VALUE,
+            )
 
             if res.status == self._STATUS_OK:
                 # Parse the response body
                 profiles_raw = json.loads(message)
-                return [VerificationProfile.VerificationProfile(profiles_raw[i])
-                        for i in range(0, len(profiles_raw))]
+                return [
+                    VerificationProfile.VerificationProfile(profiles_raw[i])
+                    for i in range(0, len(profiles_raw))
+                ]
             else:
-                reason = reason if not message else message
-                raise Exception('Error getting all profiles: ' + reason)
-        except:
-            logging.error('Error getting all profiles.')
+                reason = "" if not message else message
+                raise Exception("Error getting all profiles: " + reason)
+        except Exception:
+            logging.error("Error getting all profiles.")
             raise
 
     def create_profile(self, locale):
-        """Creates a profile on the server and returns a dictionary of the creation response.
+        """
+        Creates a profile on the server,
+        and returns a dictionary of the creation response.
 
         Arguments:
         locale -- the locale string for the profile
         """
         try:
             # Prepare the body of the message
-            body = json.dumps({'locale': '{0}'.format(locale)})
+            body = json.dumps({"locale": "{0}".format(locale)})
 
             # Send the request
             res, message = self._send_request(
-                'POST',
+                "POST",
                 self._BASE_URI,
                 self._VERIFICATION_PROFILES_URI,
                 self._JSON_CONTENT_HEADER_VALUE,
-                body)
+                body,
+            )
 
             if res.status == self._STATUS_OK:
                 # Parse the response body
-                return ProfileCreationResponse.ProfileCreationResponse(json.loads(message))
+                return ProfileCreationResponse.ProfileCreationResponse(
+                    json.loads(message)
+                )
             else:
                 reason = res.reason if not message else message
-                raise Exception('Error creating profile: ' + reason)
-				
-        except:
-            logging.error('Error creating profile.')
+                raise Exception("Error creating profile: " + reason)
+
+        except Exception:
+            logging.error("Error creating profile.")
             raise
-    
+
     def get_profile(self, profile_id):
         """Get a speaker's profile with given profile ID
-        
+
         Arguments:
         subscription_key -- the subscription key string
         profile_id -- the profile ID of the profile to resets
         """
         try:
             # Prepare the request
-            request_url = '{0}/{1}'.format(
-                self._VERIFICATION_PROFILES_URI,
-                urllib.parse.quote(profile_id))
-            
+            request_url = "{0}/{1}".format(
+                self._VERIFICATION_PROFILES_URI, urllib.parse.quote(profile_id)
+            )
+
             # Send the request
             res, message = self._send_request(
-                'GET',
-                self._BASE_URI,
-                request_url,
-                self._JSON_CONTENT_HEADER_VALUE)
-            
+                method="GET",
+                base_url=self._BASE_URI,
+                request_url=request_url,
+                content_type_value=self._JSON_CONTENT_HEADER_VALUE,
+            )
+
             if res.status == self._STATUS_OK:
                 # Parse the response body
                 profile_raw = json.loads(message)
                 return VerificationProfile.VerificationProfile(profile_raw)
             else:
-                reason = reason if not message else message
-                raise Exception('Error getting profile: ' + reason)
-            
-        except:
-            logging.error('Error getting profile')
+                reason = "" if not message else message
+                raise Exception("Error getting profile: " + reason)
+
+        except Exception:
+            logging.error("Error getting profile")
             raise
-        
-    
+
     def delete_profile(self, profile_id):
         """Delete the given profile from the server
 
@@ -121,52 +131,53 @@ class VerificationServiceHttpClientHelper:
         """
         try:
             # Prepare the request
-            request_url = '{0}/{1}'.format(
-                self._VERIFICATION_PROFILES_URI,
-                urllib.parse.quote(profile_id))
-            
+            request_url = "{0}/{1}".format(
+                self._VERIFICATION_PROFILES_URI, urllib.parse.quote(profile_id)
+            )
+
             # Send the request
             res, message = self._send_request(
-                'DELETE',
-                self._BASE_URI,
-                request_url,
-                self._JSON_CONTENT_HEADER_VALUE)
-                
+                method="DELETE",
+                base_url=self._BASE_URI,
+                request_url=request_url,
+                content_type_value=self._JSON_CONTENT_HEADER_VALUE,
+            )
+
             if res.status != self._STATUS_OK:
                 reason = res.reason if not message else message
-                raise Exception('Error deleting profile: ' + reason)
-        
-        except:
-            logging.error('Error deleting profile')
+                raise Exception("Error deleting profile: " + reason)
+
+        except Exception:
+            logging.error("Error deleting profile")
             raise
 
-    
     def reset_enrollments(self, profile_id):
         """Reset enrollments of a given profile from the server
-        
+
         Arguments:
         profile_id -- the profile ID of the profile to reset
         """
         try:
             # prepare the request
-            request_url = '{0}/{1}/reset?'.format(
-                self._VERIFICATION_PROFILES_URI,
-                urllib.parse.quote(profile_id))
-            
+            request_url = "{0}/{1}/reset?".format(
+                self._VERIFICATION_PROFILES_URI, urllib.parse.quote(profile_id)
+            )
+
             # Send the request
             res, message = self._send_request(
-                'POST',
-                self._BASE_URI,
-                request_url,
-                self._JSON_CONTENT_HEADER_VALUE)
-            
+                method="POST",
+                base_url=self._BASE_URI,
+                request_url=request_url,
+                content_type_value=self._JSON_CONTENT_HEADER_VALUE,
+            )
+
             if res.status != self._STATUS_OK:
                 reason = res.reason if not message else message
-                raise Exception('Error resetting profile: ' + reason)
-        except:
-            logging.error('Error resetting profile')
+                raise Exception("Error resetting profile: " + reason)
+        except Exception:
+            logging.error("Error resetting profile")
             raise
-    
+
     def enroll_profile(self, profile_id, file_path):
         """Enrolls a profile using an audio file and returns a
         dictionary of the enrollment response.
@@ -177,28 +188,29 @@ class VerificationServiceHttpClientHelper:
         """
         try:
             # Prepare the request
-            request_url = '{0}/{1}/enroll'.format(
-                self._VERIFICATION_PROFILES_URI,
-                urllib.parse.quote(profile_id))
-
+            request_url = "{0}/{1}/enroll".format(
+                self._VERIFICATION_PROFILES_URI, urllib.parse.quote(profile_id)
+            )
 
             # Prepare the body of the message
-            with open(file_path, 'rb') as body:
+            with open(file_path, "rb") as body:
                 # Send the request
                 res, message = self._send_request(
-                    'POST',
+                    "POST",
                     self._BASE_URI,
                     request_url,
                     self._STREAM_CONTENT_HEADER_VALUE,
-                    body)
+                    body,
+                )
             if res.status == self._STATUS_OK:
                 # Parse the response body
-                return EnrollmentResponse.EnrollmentResponse(json.loads(message))
+                json_msg = json.loads(message)
+                return EnrollmentResponse.EnrollmentResponse(json_msg)
             else:
                 reason = res.reason if not message else message
-                raise Exception('Error enrolling profile: ' + reason)
-        except:
-            logging.error('Error enrolling profile.')
+                raise Exception("Error enrolling profile: " + reason)
+        except Exception:
+            logging.error("Error enrolling profile.")
             raise
 
     def verify_file(self, file_path, profile_id):
@@ -210,53 +222,62 @@ class VerificationServiceHttpClientHelper:
         """
         try:
             # Prepare the request
-            request_url = '{0}?verificationProfileId={1}'.format(
-                self._VERIFICATION_URI,
-                urllib.parse.quote(profile_id))
+            request_url = "{0}?verificationProfileId={1}".format(
+                self._VERIFICATION_URI, urllib.parse.quote(profile_id)
+            )
 
             # Prepare the body of the message
-            with open(file_path, 'rb') as body:
+            with open(file_path, "rb") as body:
                 # Send the request
                 res, message = self._send_request(
-                    'POST',
+                    "POST",
                     self._BASE_URI,
                     request_url,
                     self._STREAM_CONTENT_HEADER_VALUE,
-                    body)
+                    body,
+                )
 
             if res.status == self._STATUS_OK:
                 # Parse the response body
-                return VerificationResponse.VerificationResponse(json.loads(message))
+                json_msg = json.loads(message)
+                return VerificationResponse.VerificationResponse(json_msg)
             else:
                 reason = res.reason if not message else message
-                raise Exception('Error verifying audio from file: ' + reason)
-        except:
-            logging.error('Error performing verification.')
+                raise Exception("Error verifying audio from file: " + reason)
+        except Exception:
+            logging.error("Error performing verification.")
             raise
 
-    def _send_request(self, method, base_url, request_url, content_type_value, body=None):
-        """Sends the request to the server then returns the response and the response body string.
+    def _send_request(
+        self, method, base_url, request_url, content_type_value, body=None
+    ):
+        """
+        Sends the request to the server,
+        then returns the response and the response body string.
 
         Arguments:
         method -- specifies whether the request is a GET or POST request
         base_url -- the base url for the connection
         request_url -- the request url for the connection
-        content_type_value -- the value of the content type field in the headers
+        content_type_value
+            -- the value of the content type field in the headers
         body -- the body of the request (needed only in POST methods)
         """
         try:
             # Set the headers
-            headers = {self._CONTENT_TYPE_HEADER: content_type_value,
-                       self._SUBSCRIPTION_KEY_HEADER: self._subscription_key}
+            headers = {
+                self._CONTENT_TYPE_HEADER: content_type_value,
+                self._SUBSCRIPTION_KEY_HEADER: self._subscription_key,
+            }
 
             # Start the connection
             with closing(http.client.HTTPSConnection(base_url)) as conn:
                 # Send the request
                 conn.request(method, request_url, body, headers)
                 res = conn.getresponse()
-                message = res.read().decode('utf-8')
+                message = res.read().decode("utf-8")
 
                 return res, message
-        except:
-            logging.error('Error sending the request.')
+        except Exception:
+            logging.error("Error sending the request.")
             raise

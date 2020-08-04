@@ -1,8 +1,8 @@
-class VerificationResponse:
+class VerificationResponse(object):
     """This class encapsulates the verification response."""
 
-    _RESULT = 'result'
-    _CONFIDENCE = 'confidence'
+    _RESULT = "result"
+    _CONFIDENCE = "confidence"
 
     def __init__(self, response):
         """Constructor of the VerificationResponse class.
@@ -14,7 +14,9 @@ class VerificationResponse:
         self._confidence = response.get(self._CONFIDENCE, None)
 
     def get_result(self):
-        """Returns whether the voice clip belongs to the profile (Accept / Reject)"""
+        """
+        Returns whether the voice clip belongs to the profile (Accept / Reject)
+        """
         return self._result
 
     def get_confidence(self):

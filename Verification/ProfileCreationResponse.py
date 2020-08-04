@@ -1,7 +1,9 @@
-class ProfileCreationResponse:
-    """This class encapsulates the response of the creation of a user profile."""
+class ProfileCreationResponse(object):
+    """
+    This class encapsulates the response of the creation of a user profile.
+    """
 
-    _PROFILE_ID = 'verificationProfileId'
+    _PROFILE_ID = "verificationProfileId"
 
     def __init__(self, response):
         """Constructor of the ProfileCreationResponse class.
